@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Producto - GreenShop</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 30px 40px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+      width: 420px;
+    }
+    h2 { text-align: center; color: #2e7d32; margin-bottom: 25px; }
+    label { font-weight: bold; color: #333; display: block; margin-bottom: 6px; }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      width: 100%;
+      background-color: #f9a825;
+      color: #000;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover { background-color: #fdd835; }
+    .preview-container { text-align: center; margin-bottom: 20px; }
+    .preview-container img {
+      width: 100%;
+      max-width: 220px;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: none;
+      margin: 10px auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Agregar Producto</h2>
+
+    <form id="productForm" enctype="multipart/form-data">
+      <label>Nombre:</label>
+      <input type="text" id="nom_producto" name="nom_producto" required>
+
+      <label>Categoría:</label>
+      <select id="cat_producto" name="cat_producto" required>
+        <option value="">Seleccione</option>
+        <option value="Electrodomésticos">Electrodomésticos</option>
+        <option value="Comida">Comida</option>
+        <option value="Hogar">Hogar</option>
+        <option value="Ropa">Ropa</option>
+      </select>
+
+      <label>Precio:</label>
+      <input type="number" id="pre_producto" name="pre_producto" required>
+
+      <label>Stock:</label>
+      <input type="number" id="sto_producto" name="sto_producto" required>
+
+      <label>Imagen:</label>
+      <input type="file" id="imagen" name="imagen" accept="image/*" required>
+
+      <div class="preview-container">
+        <img id="preview" alt="Previsualización">
+      </div>
+
+      <button type="submit">Guardar Producto</button>
+    </form>
+  </div>
+
+  <script>
+    const userRole = localStorage.getItem("userRole");
+    if (userRole !== "admin") {
+      alert("No tienes permiso para acceder a esta sección");
+      window.location.href = "home.html";
+    }
+
+    const form = document.getElementById("productForm");
+    const preview = document.getElementById("preview");
+
+    document.getElementById("imagen").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { preview.src = ev.target.result; preview.style.display = "block"; };
+      reader.readAsDataURL(file);
+    });
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      await fetch("http://localhost:4000/api/catalog", { method: "POST", body: formData });
+      alert("✅ Producto agregado correctamente");
+      form.reset();
+      preview.style.display = "none";
+    });
+  </script>
+</body>
+</html>

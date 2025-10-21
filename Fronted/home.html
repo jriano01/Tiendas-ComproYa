@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ComproYa</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 0; background: #f9f9f9; }
+    header { background-color: #2e7d32; color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 24px; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-weight: 500; }
+    nav a:hover { text-decoration: underline; }
+
+    .userbox { display:flex; align-items:center; gap:10px; }
+    .userbox img { width:32px; height:32px; border-radius:50%; object-fit:cover; }
+    .btn { cursor:pointer; border:none; border-radius:8px; padding:8px 12px; font-weight:600; }
+    .btn-login { background:#fff; color:#2e7d32; }
+    .btn-login:hover { background:#f1f8e9; }
+    .btn-logout { background:#c62828; color:#fff; }
+    .btn-logout:hover { background:#b71c1c; }
+
+    .search-bar { display:flex; justify-content:center; margin:20px auto; width:80%; }
+    .search-bar input { width:60%; padding:10px; border-radius:8px 0 0 8px; border:1px solid #ccc; }
+    .search-bar button { padding:10px 20px; border:none; background:#f9a825; color:#000; font-weight:bold; border-radius:0 8px 8px 0; cursor:pointer; }
+    .search-bar button:hover { background:#fdd835; }
+
+    .categories { display:flex; justify-content:center; flex-wrap:wrap; gap:15px; margin:20px 0; }
+    .category-btn { background:#f9a825; border:none; border-radius:8px; padding:10px 15px; cursor:pointer; font-weight:bold; }
+    .category-btn:hover { background:#fdd835; }
+
+    .product-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; padding:30px; }
+    .product-card { background:#fff; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,.1); overflow:hidden; text-align:center; transition:transform .2s; }
+    .product-card:hover { transform: scale(1.03); }
+    .product-card img { width:100%; height:200px; object-fit:cover; }
+    .product-info { padding:15px; }
+    .add-btn { background:#2e7d32; color:#fff; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; margin-top:10px; }
+    .add-btn:hover { background:#1b5e20; }
+
+    .cart-icon { position:fixed; bottom:30px; right:30px; background:#f9a825; color:#000; padding:14px; border-radius:50%; font-size:20px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,.2); }
+    .cart-icon:hover { background:#fdd835; }
+
+    .cart-sidebar { position:fixed; top:0; right:-400px; width:380px; height:100%; background:#fff; box-shadow:-3px 0 10px rgba(0,0,0,.3); padding:20px; overflow-y:auto; transition:right .3s; z-index:10; }
+    .cart-sidebar.open { right:0; }
+    .cart-header { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; }
+    .cart-item { display:flex; align-items:center; margin:15px 0; border-bottom:1px solid #eee; padding-bottom:10px; }
+    .cart-item img { width:70px; height:70px; object-fit:cover; border-radius:6px; margin-right:10px; }
+    .cart-item-info { flex:1; }
+    .cart-item button { background:#c62828; color:#fff; border:none; border-radius:6px; padding:6px; cursor:pointer; }
+    .cart-item button:hover { background:#b71c1c; }
+    .cart-footer { margin-top:20px; text-align:center; }
+    .checkout-btn { background:#2e7d32; color:#fff; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+    .checkout-btn:hover { background:#1b5e20; }
+
+    /* Modal Login */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:20; }
+    .modal.open { display:flex; }
+    .modal-card { width:95%; max-width:420px; background:#fff; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,.15); padding:20px; }
+    .modal h2 { margin:0 0 12px; }
+    .field { display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+    .field input { padding:10px; border:1px solid #ccc; border-radius:8px; }
+    .actions { display:flex; gap:10px; align-items:center; }
+    .btn-primary { background:#2e7d32; color:#fff; }
+    .btn-google { background:#fff; color:#000; border:1px solid #ddd; }
+    .btn-close { background:#eee; color:#333; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛍️ ComproYa</h1>
+    <nav id="navLinks">
+      <a href="home.html">Inicio</a>
+      <a href="agregar_producto.html" id="addProductLink" style="display:none">Agregar</a>
+      <a href="gestionar_productos.html" id="manageProductLink" style="display:none">Gestionar</a>
+      <span id="authBox" class="userbox">
+        <button class="btn btn-login" onclick="openLogin()">Iniciar sesión</button>
+      </span>
+    </nav>
+  </header>
+
+  <!-- Buscador -->
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Buscar productos...">
+    <button onclick="buscarProductos()">Buscar</button>
+  </div>
+
+  <!-- Categorías -->
+  <div class="categories">
+    <button class="category-btn" onclick="filtrarCategoria('Todos')">Todos</button>
+    <button class="category-btn" onclick="filtrarCategoria('Electrodomésticos')">Electrodomésticos</button>
+    <button class="category-btn" onclick="filtrarCategoria('Comida')">Comida</button>
+    <button class="category-btn" onclick="filtrarCategoria('Hogar')">Hogar</button>
+    <button class="category-btn" onclick="filtrarCategoria('Ropa')">Ropa</button>
+  </div>
+
+  <!-- Productos -->
+  <div class="product-grid" id="productContainer"></div>
+
+  <!-- 🛒 Carrito lateral -->
+  <div id="cartSidebar" class="cart-sidebar">
+    <div class="cart-header">
+      <h2>🛒 Mi Carrito</h2>
+      <button onclick="cerrarCarrito()">❌</button>
+    </div>
+    <div id="cartItems"></div>
+    <div class="cart-footer">
+      <h3>Total: <span id="total">0</span></h3>
+      <button class="checkout-btn" onclick="finalizarCompra()">Finalizar compra</button>
+    </div>
+  </div>
+
+  <!-- 🛒 Icono flotante -->
+  <div class="cart-icon" onclick="abrirCarrito()">🛒</div>
+
+  <!-- Modal Login -->
+  <div id="loginModal" class="modal" onclick="closeIfBackdrop(event)">
+    <div class="modal-card">
+      <h2>Iniciar sesión</h2>
+      <div class="field">
+        <label for="email">Correo</label>
+        <input id="email" type="email" placeholder="tu@correo.com">
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" placeholder="••••••••">
+      </div>
+      <div class="actions" style="margin:12px 0;">
+        <button class="btn btn-primary" onclick="loginLocal()">Entrar</button>
+        <button class="btn btn-google" onclick="loginGoogle()">Iniciar con Google</button>
+        <button class="btn btn-close" onclick="closeLogin()">Cerrar</button>
+      </div>
+      <small>¿Olvidaste tu contraseña? (demo sin recuperación)</small>
+    </div>
+  </div>
+
+  <script>
+    const API = "/api";
+
+    // ===== Modal login =====
+    function openLogin(){ document.getElementById("loginModal").classList.add("open"); }
+    function closeLogin(){ document.getElementById("loginModal").classList.remove("open"); }
+    function closeIfBackdrop(e){ if(e.target.id==="loginModal") closeLogin(); }
+
+    function loginGoogle(){ window.location.href="/auth/google"; }
+
+    async function loginLocal(){
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      if(!email || !password){ alert("Ingresa correo y contraseña"); return; }
+      try{
+        const res = await fetch("/auth/local/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json().catch(()=> ({}));
+        if(res.ok){
+          closeLogin();
+          await refreshAuthUI();
+        }else{
+          alert(data.message || "Login fallido");
+        }
+      }catch(err){
+        console.error(err);
+        alert("Error en login local");
+      }
+    }
+
+    // ===== Sesión (me/logout) =====
+    const addLink = document.getElementById("addProductLink");
+    const manageLink = document.getElementById("manageProductLink");
+    const authBox = document.getElementById("authBox");
+
+    async function refreshAuthUI() {
+      try {
+        const res = await fetch("/auth/me", { credentials: "include" });
+        const me = await res.json();
+        if (me.authenticated) {
+          if (me.role === "admin") {
+            addLink.style.display = "inline";
+            manageLink.style.display = "inline";
+          } else {
+            addLink.style.display = "none";
+            manageLink.style.display = "none";
+          }
+          authBox.innerHTML = `
+            <img src="${me.picture || ""}" alt="${me.name || me.email}">
+            <span>${me.name || me.email}</span>
+            <button class="btn btn-logout" onclick="logout()">Salir</button>
+          `;
+        } else {
+          addLink.style.display = "none";
+          manageLink.style.display = "none";
+          authBox.innerHTML = `<button class="btn btn-login" onclick="openLogin()">Iniciar sesión</button>`;
+        }
+      } catch (e) {
+        console.error(e);
+        authBox.innerHTML = `<button class="btn btn-login" onclick="openLogin()">Iniciar sesión</button>`;
+      }
+    }
+
+    async function logout() {
+      await fetch("/auth/logout", { method: "POST", credentials: "include" });
+      await refreshAuthUI();
+    }
+
+    // ===== Utilidad de moneda =====
+    const fmt = (n) => Number(n || 0).toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+
+    // ===== Productos =====
+    let productos = [];
+    async function cargarProductos() {
+      const res = await fetch(`${API}/catalog`);
+      if (!res.ok) {
+        console.error("Error cargando productos:", await res.text());
+        alert("No se pudo cargar el catálogo");
+        return;
+      }
+      productos = await res.json();
+      mostrarProductos(productos);
+    }
+
+    function mostrarProductos(lista) {
+      const container = document.getElementById("productContainer");
+      container.innerHTML = lista.map(p => {
+        // Si p.imagen viene como "/uploads/xxx.jpg" -> pedir a /uploads (proxy gateway)
+        // si no, pedimos por /api/catalog + lo que venga
+        const imgUrl = String(p.imagen || "").startsWith("/uploads")
+          ? p.imagen
+          : `/api/catalog${p.imagen || ""}`;
+
+        const safeName = String(p.nom_producto).replace(/'/g,"&#39;");
+        return `
+          <div class="product-card">
+            <img src="${imgUrl}" alt="${safeName}">
+            <div class="product-info">
+              <h3>${safeName}</h3>
+              <p><strong>${p.cat_producto}</strong></p>
+              <p>${fmt(p.pre_producto)}</p>
+              <button class="add-btn" onclick="agregarAlCarrito(${p.id_producto}, '${safeName}', ${p.pre_producto}, '${imgUrl}')">
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function filtrarCategoria(cat) {
+      if (cat === "Todos") return mostrarProductos(productos);
+      const filtrados = productos.filter(p => p.cat_producto === cat);
+      mostrarProductos(filtrados);
+    }
+
+    function buscarProductos() {
+      const term = document.getElementById("searchInput").value.toLowerCase();
+      const filtrados = productos.filter(p =>
+        p.nom_producto.toLowerCase().includes(term) ||
+        p.cat_producto.toLowerCase().includes(term)
+      );
+      mostrarProductos(filtrados);
+    }
+
+    // ===== Carrito =====
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+    function agregarAlCarrito(id, nombre, precio, imagen) {
+      const i = carrito.findIndex(it => it.id === id);
+      if (i >= 0) carrito[i].cantidad++;
+      else carrito.push({ id, nombre, precio, imagen, cantidad: 1 });
+      localStorage.setItem("carrito", JSON.stringify(carrito));
+      actualizarCarrito();
+    }
+
+    function abrirCarrito() {
+      document.getElementById("cartSidebar").classList.add("open");
+      actualizarCarrito();
+    }
+
+    function cerrarCarrito() {
+      document.getElementById("cartSidebar").classList.remove("open");
+    }
+
+    function actualizarCarrito() {
+      const cartDiv = document.getElementById("cartItems");
+      const totalSpan = document.getElementById("total");
+      if (carrito.length === 0) {
+        cartDiv.innerHTML = "<p>🛒 Tu carrito está vacío.</p>";
+        totalSpan.textContent = "0";
+        return;
+      }
+
+      let total = 0;
+      cartDiv.innerHTML = carrito.map((item, i) => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+        return `
+          <div class="cart-item">
+            <img src="${item.imagen}" alt="${item.nombre}">
+            <div class="cart-item-info">
+              <strong>${item.nombre}</strong>
+              <p>${fmt(item.precio)} x 
+                <input type="number" min="1" value="${item.cantidad}" onchange="actualizarCantidad(${i}, this.value)" style="width:60px;">
+                = ${fmt(subtotal)}
+              </p>
+            </div>
+            <button onclick="eliminarItem(${i})">🗑️</button>
+          </div>
+        `;
+      }).join("");
+
+      totalSpan.textContent = fmt(total);
+    }
+
+    function eliminarItem(i) {
+      carrito.splice(i, 1);
+      localStorage.setItem("carrito", JSON.stringify(carrito));
+      actualizarCarrito();
+    }
+
+    function actualizarCantidad(i, val) {
+      carrito[i].cantidad = Math.max(1, parseInt(val || "1", 10));
+      localStorage.setItem("carrito", JSON.stringify(carrito));
+      actualizarCarrito();
+    }
+
+    async function finalizarCompra() {
+      if (carrito.length === 0) return alert("Tu carrito está vacío");
+
+      const meRes = await fetch("/auth/me", { credentials: "include" });
+      const me = await meRes.json();
+      if (!me.authenticated) { openLogin(); return; }
+
+      const cliente = me.name || me.email || "Cliente";
+      const total = carrito.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
+      const pedido = { cliente_nombre: cliente, total, detalles: carrito };
+
+      let res = await fetch(`${API}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pedido)
+      });
+      if (res.status === 404) {
+        res = await fetch(`${API}/cart/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pedido)
+        });
+      }
+      try {
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          alert("✅ ¡Compra registrada correctamente!");
+          carrito = [];
+          localStorage.removeItem("carrito");
+          actualizarCarrito();
+          console.log("Respuesta checkout:", data);
+        } else {
+          alert("⚠️ Error: " + (data.message || res.statusText));
+        }
+      } catch (e) {
+        console.error("Error al finalizar compra:", e);
+        alert("Error al registrar la compra");
+      }
+    }
+
+    // Init
+    refreshAuthUI();
+    cargarProductos();
+  </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todos los Productos - GreenShop</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+    }
+
+    /* ======= Header ======= */
+    header {
+      background-color: #2e7d32;
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* ======= Barra de búsqueda ======= */
+    .search-bar {
+      background: #fff;
+      padding: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid #f9a825;
+    }
+
+    .search-bar input {
+      width: 300px;
+      padding: 10px;
+      border: 2px solid #2e7d32;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .search-bar button {
+      background: #f9a825;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .category-menu {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: #fff;
+      padding: 10px;
+      border-bottom: 2px solid #2e7d32;
+    }
+
+    .category-menu button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .category-menu button:hover {
+      background: #43a047;
+    }
+
+    /* ======= Cuerpo principal ======= */
+    main {
+      padding: 30px;
+    }
+
+    h2 {
+      color: #2e7d32;
+      border-bottom: 3px solid #f9a825;
+      padding-bottom: 5px;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .info {
+      padding: 10px;
+    }
+
+    .price {
+      color: #f9a825;
+      font-weight: bold;
+    }
+
+    .stock {
+      color: #2e7d32;
+      font-size: 13px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #2e7d32;
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛒 GreenShop</h1>
+    <nav>
+      <a href="home.html">Inicio</a>
+      <a href="agregar_producto.html">Agregar Producto</a>
+      <a href="productos.html">Todos los Productos</a>
+    </nav>
+  </header>
+
+  <!-- Barra de búsqueda -->
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Buscar productos por nombre o categoría...">
+    <button onclick="buscar()">Buscar</button>
+  </div>
+
+  <!-- Menú de categorías -->
+  <div class="category-menu">
+    <button onclick="filtrarCategoria('Todos')">Todos</button>
+    <button onclick="filtrarCategoria('Electrodomésticos')">Electrodomésticos</button>
+    <button onclick="filtrarCategoria('Comida')">Comida</button>
+    <button onclick="filtrarCategoria('Hogar')">Hogar</button>
+    <button onclick="filtrarCategoria('Ropa')">Ropa</button>
+  </div>
+
+  <main>
+    <div id="productosPorCategoria"></div>
+  </main>
+
+  <footer>© 2025 GreenShop - Todos los derechos reservados</footer>
+
+  <script>
+    let productos = [];
+    let categoriaActual = "Todos";
+
+    async function cargarProductos() {
+      const res = await fetch("http://localhost:4000/api/catalog");
+      productos = await res.json();
+      mostrarPorCategoria(productos);
+    }
+
+    function mostrarPorCategoria(lista) {
+      const contenedor = document.getElementById("productosPorCategoria");
+      contenedor.innerHTML = "";
+
+      // Agrupar productos por categoría
+      const categorias = {};
+      lista.forEach(p => {
+        if (!categorias[p.cat_producto]) categorias[p.cat_producto] = [];
+        categorias[p.cat_producto].push(p);
+      });
+
+      // Renderizar por categoría
+      Object.keys(categorias).forEach(cat => {
+        const productosHTML = categorias[cat].map(p => `
+          <div class="card">
+            <img src="http://localhost:4000${p.imagen || '/uploads/default.png'}" alt="${p.nom_producto}">
+            <div class="info">
+              <h3>${p.nom_producto}</h3>
+              <p>${p.cat_producto}</p>
+              <p class="price">$${p.pre_producto}</p>
+              <p class="stock">Stock: ${p.sto_producto}</p>
+            </div>
+          </div>
+        `).join("");
+
+        contenedor.innerHTML += `
+          <section>
+            <h2>${cat}</h2>
+            <div class="grid">${productosHTML}</div>
+          </section>
+        `;
+      });
+    }
+
+    function filtrarCategoria(cat) {
+      categoriaActual = cat;
+      if (cat === "Todos") {
+        mostrarPorCategoria(productos);
+      } else {
+        const filtrados = productos.filter(p => p.cat_producto.toLowerCase() === cat.toLowerCase());
+        mostrarPorCategoria(filtrados);
+      }
+    }
+
+    function buscar() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      const filtrados = productos.filter(p =>
+        p.nom_producto.toLowerCase().includes(q) ||
+        p.cat_producto.toLowerCase().includes(q)
+      );
+
+      // Si además hay una categoría seleccionada, aplicamos ambos filtros
+      if (categoriaActual !== "Todos") {
+        mostrarPorCategoria(filtrados.filter(p =>
+          p.cat_producto.toLowerCase() === categoriaActual.toLowerCase()
+        ));
+      } else {
+        mostrarPorCategoria(filtrados);
+      }
+    }
+
+    cargarProductos();
+  </script>
+</body>
+</html>
