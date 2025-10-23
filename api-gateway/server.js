@@ -22,6 +22,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(morgan("dev"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // ===== ENV / Targets =====
 const {
@@ -297,6 +298,9 @@ app.use("/api/pricing",   createProxyMiddleware({ target: S.pricing,   ...proxyC
 app.use("/api/cart",      createProxyMiddleware({ target: S.cart,      ...proxyCommon }));
 app.use("/api/payments",  createProxyMiddleware({ target: S.payments,  ...proxyCommon }));
 app.use("/api/wallet",    createProxyMiddleware({ target: S.wallet,    ...proxyCommon }));
+// ...
+app.use("/api/auth",     createProxyMiddleware({ target: `http://localhost:${process.env.AUTH_PORT||4010}`, changeOrigin: true }));
+// ...
 
 // ===== Start
 const listenPort = Number(PORT || GATEWAY_PORT || 3000);
